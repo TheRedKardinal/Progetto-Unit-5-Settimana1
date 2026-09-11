@@ -30,7 +30,7 @@ public class Foto {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "contenuto")
+    @Column(name = "contenuto", columnDefinition = "TEXT")
     private String contenuto;
 
     @Column(name = "created_at", nullable = false)

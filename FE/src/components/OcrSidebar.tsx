@@ -19,6 +19,7 @@ export function OcrSidebar() {
   const [documenti, setDocumenti] = useState<Documento[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewingDocumento, setViewingDocumento] = useState<Documento | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,11 +86,22 @@ export function OcrSidebar() {
     }
   };
 
-  const handleSelectDocumento = (doc: Documento) => {
-    setDocumento(doc);
-    setTestoModificato(doc.testo ?? '');
-    setSaved(false);
+  const handleViewDocumento = (doc: Documento) => {
+    setViewingDocumento(doc);
+    setDocumento(null);
     setError(null);
+  };
+
+  const handleStartEditFromView = () => {
+    if (!viewingDocumento) return;
+    setDocumento(viewingDocumento);
+    setTestoModificato(viewingDocumento.testo ?? '');
+    setSaved(false);
+    setViewingDocumento(null);
+  };
+
+  const handleCloseView = () => {
+    setViewingDocumento(null);
   };
 
   const handleDeleteDocumento = async (id: string) => {
@@ -103,6 +115,9 @@ export function OcrSidebar() {
       if (documento?.id === id) {
         setDocumento(null);
         setTestoModificato('');
+      }
+      if (viewingDocumento?.id === id) {
+        setViewingDocumento(null);
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Errore durante l'eliminazione del documento");
@@ -137,6 +152,25 @@ export function OcrSidebar() {
         </button>
       </form>
 
+      {viewingDocumento && (
+        <div className="card ocr-upload-card">
+          <h3>{viewingDocumento.titolo}</h3>
+          <img className="ocr-document-preview-image" src={viewingDocumento.contenuto} alt={viewingDocumento.titolo} />
+          <p className="muted">Testo estratto:</p>
+          <p className="ocr-document-preview-text">
+            {viewingDocumento.testo && viewingDocumento.testo.trim() !== '' ? viewingDocumento.testo : '(nessun testo estratto)'}
+          </p>
+          <div className="ocr-document-view-actions">
+            <button type="button" className="btn btn-primary" onClick={handleStartEditFromView}>
+              Modifica testo
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={handleCloseView}>
+              Chiudi
+            </button>
+          </div>
+        </div>
+      )}
+
       {documento && (
         <form className="card ocr-upload-card" onSubmit={handleCorrection}>
           <h3>Testo estratto</h3>
@@ -167,7 +201,7 @@ export function OcrSidebar() {
           <ul className="ocr-document-list">
             {documenti.map((doc) => (
               <li key={doc.id} className="ocr-document-item">
-                <button type="button" className="ocr-document-title" onClick={() => handleSelectDocumento(doc)}>
+                <button type="button" className="ocr-document-title" onClick={() => handleViewDocumento(doc)}>
                   {doc.titolo}
                 </button>
                 <button

@@ -6,11 +6,12 @@
 
 .address-row {
   display: flex;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.address-row input {
-  flex: 1;
+.address-row button {
+  white-space: nowrap;
 }
 
 .location-summary {

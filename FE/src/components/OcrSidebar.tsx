@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { fileToDataUrl } from '../utils/fileToDataUrl';
 import { createDocumento, updateDocumento } from '../api/documents';
 import type { Documento } from '../api/types';
 import { ApiError } from '../api/client';
-import './OcrPage.css';
+import './OcrSidebar.css';
 
-export function OcrPage() {
+export function OcrSidebar() {
   const [titolo, setTitolo] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [documento, setDocumento] = useState<Documento | null>(null);
@@ -63,10 +62,7 @@ export function OcrPage() {
 
   return (
     <div>
-      <Link to="/" className="muted ocr-back-link">
-        &larr; Torna al profilo
-      </Link>
-      <h1>Scansione documento (OCR)</h1>
+      <h2>Scansione documento (OCR)</h2>
 
       {error && <p className="error-banner">{error}</p>}
 
@@ -92,7 +88,7 @@ export function OcrPage() {
 
       {documento && (
         <form className="card" onSubmit={handleCorrection}>
-          <h2>Testo estratto</h2>
+          <h3>Testo estratto</h3>
           <p className="muted">Puoi correggere manualmente il testo se l'OCR ha letto male qualcosa.</p>
           {saved && <p className="success-banner">Correzione salvata!</p>}
           <div className="field">

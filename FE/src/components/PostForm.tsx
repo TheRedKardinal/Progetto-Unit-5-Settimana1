@@ -69,46 +69,47 @@ export function PostForm({ onCreated }: PostFormProps) {
   };
 
   return (
-    <form className="post-form card" onSubmit={handleSubmit}>
+    <div className="post-form">
       <h2>Crea un nuovo post</h2>
+      <form className="card" onSubmit={handleSubmit}>
+        {error && <p className="error-banner">{error}</p>}
+        {success && <p className="success-banner">Post pubblicato con successo!</p>}
 
-      {error && <p className="error-banner">{error}</p>}
-      {success && <p className="success-banner">Post pubblicato con successo!</p>}
+        <div className="field">
+          <label htmlFor="titolo">Titolo</label>
+          <input
+            id="titolo"
+            type="text"
+            value={titolo}
+            onChange={(event) => setTitolo(event.target.value)}
+            required
+          />
+        </div>
 
-      <div className="field">
-        <label htmlFor="titolo">Titolo</label>
-        <input
-          id="titolo"
-          type="text"
-          value={titolo}
-          onChange={(event) => setTitolo(event.target.value)}
-          required
-        />
-      </div>
+        <div className="field">
+          <label htmlFor="descrizione">Descrizione</label>
+          <textarea
+            id="descrizione"
+            value={descrizione}
+            onChange={(event) => setDescrizione(event.target.value)}
+            required
+          />
+        </div>
 
-      <div className="field">
-        <label htmlFor="descrizione">Descrizione</label>
-        <textarea
-          id="descrizione"
-          value={descrizione}
-          onChange={(event) => setDescrizione(event.target.value)}
-          required
-        />
-      </div>
+        <div className="field">
+          <label>Foto</label>
+          <PhotoCapture photos={photos} onChange={setPhotos} />
+        </div>
 
-      <div className="field">
-        <label>Foto</label>
-        <PhotoCapture photos={photos} onChange={setPhotos} />
-      </div>
+        <div className="field">
+          <label>Posizione</label>
+          <LocationPicker value={location} onChange={setLocation} />
+        </div>
 
-      <div className="field">
-        <label>Posizione</label>
-        <LocationPicker value={location} onChange={setLocation} />
-      </div>
-
-      <button type="submit" className="btn btn-primary" disabled={submitting}>
-        {submitting ? 'Pubblicazione...' : 'Pubblica post'}
-      </button>
-    </form>
+        <button type="submit" className="btn btn-primary" disabled={submitting}>
+          {submitting ? 'Pubblicazione...' : 'Pubblica post'}
+        </button>
+      </form>
+    </div>
   );
 }

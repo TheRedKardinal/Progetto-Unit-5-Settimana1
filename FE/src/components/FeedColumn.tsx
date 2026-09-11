@@ -3,12 +3,12 @@ import { listPosts } from '../api/posts';
 import { listFoto } from '../api/pics';
 import { listPoi } from '../api/poi';
 import type { Foto, Poi, Post } from '../api/types';
-import { PostCard } from '../components/PostCard';
-import { PostsMap } from '../components/PostsMap';
+import { PostCard } from './PostCard';
+import { PostsMap } from './PostsMap';
 import { ApiError } from '../api/client';
-import './FeedPage.css';
+import './FeedColumn.css';
 
-export function FeedPage() {
+export function FeedColumn() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [fotoById, setFotoById] = useState<Record<string, Foto>>({});
   const [poiById, setPoiById] = useState<Record<string, Poi>>({});

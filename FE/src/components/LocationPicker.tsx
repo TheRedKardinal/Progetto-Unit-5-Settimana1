@@ -16,7 +16,7 @@ interface LocationPickerProps {
   onChange: (value: LocationValue) => void;
 }
 
-const containerStyle = { width: '100%', height: '320px', borderRadius: '10px' };
+const containerStyle = { width: '100%', height: '220px', borderRadius: '10px' };
 const defaultCenter = { lat: 41.9028, lng: 12.4964 };
 
 export function LocationPicker({ value, onChange }: LocationPickerProps) {

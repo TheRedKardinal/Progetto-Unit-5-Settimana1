@@ -2,28 +2,32 @@ package com.example.demo.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import net.sourceforge.tess4j.ITesseract;
-import net.sourceforge.tess4j.Tesseract;
-import net.sourceforge.tess4j.TesseractException;
-
+/**
+ * Esegue l'OCR invocando direttamente il binario a riga di comando di
+ * Tesseract, invece del wrapper Java tess4j/lept4j: quest'ultimo, su questa
+ * JDK, ha un bug nella conversione dell'immagine (IndexOutOfBoundsException
+ * in lept4j.LeptUtils.convertImageToPix) che il binario nativo non ha.
+ */
 @Service
 public class OcrService {
 
-    private final ITesseract tesseract;
+    private final String binaryPath;
+    private final String tessdataPath;
+    private final String language;
 
-    public OcrService(@Value("${ocr.tessdata-path}") String tessdataPath,
-                       @Value("${ocr.language}") String language,
-                       @Value("${ocr.native-library-path}") String nativeLibraryPath) {
-        System.setProperty("jna.library.path", nativeLibraryPath);
-        this.tesseract = new Tesseract();
-        this.tesseract.setDatapath(tessdataPath);
-        this.tesseract.setLanguage(language);
+    public OcrService(@Value("${ocr.binary-path}") String binaryPath,
+                       @Value("${ocr.tessdata-path}") String tessdataPath,
+                       @Value("${ocr.language}") String language) {
+        this.binaryPath = binaryPath;
+        this.tessdataPath = tessdataPath;
+        this.language = language;
     }
 
     public String estraiTesto(String contenutoBase64) {
@@ -38,11 +42,41 @@ public class OcrService {
         }
 
         try {
-            return tesseract.doOCR(tempFile).trim();
-        } catch (TesseractException e) {
-            throw new IllegalStateException("Errore durante l'elaborazione OCR", e);
+            return eseguiTesseract(tempFile);
         } finally {
             tempFile.delete();
+        }
+    }
+
+    private String eseguiTesseract(File imageFile) {
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                binaryPath,
+                imageFile.getAbsolutePath(),
+                "stdout",
+                "-l", language,
+                "--tessdata-dir", tessdataPath);
+
+        try {
+            Process process = processBuilder.start();
+
+            String output;
+            String errorOutput;
+            try (var stdout = process.getInputStream(); var stderr = process.getErrorStream()) {
+                output = new String(stdout.readAllBytes(), StandardCharsets.UTF_8);
+                errorOutput = new String(stderr.readAllBytes(), StandardCharsets.UTF_8);
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new IllegalStateException("Errore durante l'elaborazione OCR: " + errorOutput.trim());
+            }
+
+            return output.trim();
+        } catch (IOException e) {
+            throw new IllegalStateException("Impossibile avviare Tesseract: verificare 'ocr.binary-path'", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Elaborazione OCR interrotta", e);
         }
     }
 

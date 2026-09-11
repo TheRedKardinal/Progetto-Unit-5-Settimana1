@@ -1,4 +1,4 @@
-import { LoadScript } from '@react-google-maps/api';
+import 'leaflet/dist/leaflet.css';
 import { NavBar } from './components/NavBar';
 import { PostForm } from './components/PostForm';
 import { FeedColumn } from './components/FeedColumn';
@@ -7,7 +7,7 @@ import './App.css';
 
 function App() {
   return (
-    <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_KEY}>
+    <>
       <NavBar />
       <main className="app-layout">
         <aside className="app-sidebar app-sidebar-left">
@@ -20,7 +20,7 @@ function App() {
           <OcrSidebar />
         </aside>
       </main>
-    </LoadScript>
+    </>
   );
 }
 

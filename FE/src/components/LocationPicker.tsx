@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import '../utils/leafletIcons';
 import { geocodeAddress } from '../api/geocoding';
 import { ApiError } from '../api/client';
 import './LocationPicker.css';
@@ -17,32 +18,47 @@ interface LocationPickerProps {
 }
 
 const containerStyle = { width: '100%', height: '220px', borderRadius: '10px' };
-const defaultCenter = { lat: 41.9028, lng: 12.4964 };
+const defaultCenter: [number, number] = [41.9028, 12.4964];
+
+function MapClickHandler({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(event) {
+      onSelect(event.latlng.lat, event.latlng.lng);
+    },
+  });
+  return null;
+}
+
+function RecenterOnChange({ lat, lng }: { lat: number | undefined; lng: number | undefined }) {
+  const map = useMap();
+  useEffect(() => {
+    if (lat !== undefined && lng !== undefined) {
+      map.setView([lat, lng], map.getZoom() < 12 ? 14 : map.getZoom());
+    }
+  }, [lat, lng, map]);
+  return null;
+}
 
 export function LocationPicker({ value, onChange }: LocationPickerProps) {
   const [addressInput, setAddressInput] = useState(value.indirizzo ?? '');
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
-  const position =
+  const position: [number, number] | null =
     value.latitudine !== undefined && value.longitudine !== undefined
-      ? { lat: value.latitudine, lng: value.longitudine }
+      ? [value.latitudine, value.longitudine]
       : null;
-
-  const handleMapClick = useCallback(
-    (event: google.maps.MapMouseEvent) => {
-      if (!event.latLng) return;
-      onChange({
-        indirizzo: value.indirizzo,
-        latitudine: event.latLng.lat(),
-        longitudine: event.latLng.lng(),
-      });
-    },
-    [onChange, value.indirizzo],
-  );
 
   const handleAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
     setAddressInput(event.target.value);
+  };
+
+  const handleMapSelect = (lat: number, lng: number) => {
+    onChange({
+      indirizzo: value.indirizzo,
+      latitudine: lat,
+      longitudine: lng,
+    });
   };
 
   const handleGeocode = async () => {
@@ -88,19 +104,20 @@ export function LocationPicker({ value, onChange }: LocationPickerProps) {
 
       <p className="muted">Oppure clicca un punto sulla mappa per selezionare la posizione.</p>
 
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={position ?? defaultCenter}
-        zoom={position ? 14 : 5}
-        onClick={handleMapClick}
-      >
+      <MapContainer center={position ?? defaultCenter} zoom={position ? 14 : 5} style={containerStyle}>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapClickHandler onSelect={handleMapSelect} />
+        <RecenterOnChange lat={value.latitudine} lng={value.longitudine} />
         {position && <Marker position={position} />}
-      </GoogleMap>
+      </MapContainer>
 
       {position && (
         <div className="location-summary">
           <span className="muted">
-            Lat: {position.lat.toFixed(6)}, Lng: {position.lng.toFixed(6)}
+            Lat: {position[0].toFixed(6)}, Lng: {position[1].toFixed(6)}
           </span>
           <button type="button" className="btn btn-secondary" onClick={handleClear}>
             Rimuovi posizione

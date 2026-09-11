@@ -6,67 +6,54 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 import com.example.demo.dto.geocoding.GeocodeResponse;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Geocodifica indirizzi tramite Geocoding API v4 di Google (server-to-server:
- * la chiave viaggia nell'header X-Goog-Api-Key, mai esposta al browser).
+ * Geocodifica indirizzi tramite Nominatim (OpenStreetMap): servizio gratuito,
+ * senza chiave API né fatturazione richiesta.
  */
 @Service
 public class GeocodingService {
 
-    private static final String GEOCODE_URL = "https://geocode.googleapis.com/v4/geocode/address/";
+    private static final String NOMINATIM_URL = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=";
+    private static final String USER_AGENT = "Postbook/1.0 (social network didattico)";
 
     private final RestClient restClient = RestClient.create();
-    private final String apiKey;
-
-    public GeocodingService(@Value("${google.maps.api-key}") String apiKey) {
-        this.apiKey = apiKey;
-    }
 
     public GeocodeResponse geocode(String indirizzo) {
-        String encoded = URLEncoder.encode(indirizzo, StandardCharsets.UTF_8).replace("+", "%20");
-        // URI.create() non ri-codifica una stringa già percent-encoded: passare la
-        // stringa direttamente a .uri(String) farebbe invece un doppio encoding
-        // (es. "%20" -> "%2520"), facendo fallire silenziosamente la ricerca lato Google.
-        URI uri = URI.create(GEOCODE_URL + encoded);
+        String encoded = URLEncoder.encode(indirizzo, StandardCharsets.UTF_8);
+        URI uri = URI.create(NOMINATIM_URL + encoded);
 
-        ApiResponse response;
+        List<NominatimResult> results;
         try {
-            response = restClient.get()
+            results = restClient.get()
                     .uri(uri)
-                    .header("X-Goog-Api-Key", apiKey)
+                    .header("User-Agent", USER_AGENT)
                     .retrieve()
-                    .body(ApiResponse.class);
+                    .body(new ParameterizedTypeReference<List<NominatimResult>>() {
+                    });
         } catch (RestClientResponseException e) {
-            throw new IllegalStateException(
-                    "Geocoding non disponibile (verifica billing e Geocoding API abilitati sul progetto Google Cloud): "
-                            + e.getStatusText());
+            throw new IllegalStateException("Geocoding non disponibile: " + e.getStatusText());
         }
 
-        if (response == null || response.results() == null || response.results().isEmpty()) {
+        if (results == null || results.isEmpty()) {
             throw new ResourceNotFoundException("Indirizzo non trovato: " + indirizzo);
         }
 
-        ApiResult first = response.results().get(0);
+        NominatimResult first = results.get(0);
         return new GeocodeResponse(
-                first.formattedAddress(),
-                BigDecimal.valueOf(first.location().latitude()),
-                BigDecimal.valueOf(first.location().longitude()));
+                first.displayName(),
+                new BigDecimal(first.lat()),
+                new BigDecimal(first.lon()));
     }
 
-    private record ApiResponse(List<ApiResult> results) {
-    }
-
-    private record ApiResult(String formattedAddress, ApiLatLng location) {
-    }
-
-    private record ApiLatLng(double latitude, double longitude) {
+    private record NominatimResult(String lat, String lon, @JsonProperty("display_name") String displayName) {
     }
 }

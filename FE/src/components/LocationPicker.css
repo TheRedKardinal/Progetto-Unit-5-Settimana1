@@ -1,0 +1,22 @@
+.location-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.address-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.address-row input {
+  flex: 1;
+}
+
+.location-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

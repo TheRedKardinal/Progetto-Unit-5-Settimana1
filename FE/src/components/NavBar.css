@@ -1,0 +1,40 @@
+.navbar {
+  background: var(--color-primary);
+  box-shadow: var(--shadow);
+}
+
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 0.9rem;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary-contrast);
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.navbar-links a {
+  color: var(--color-primary-contrast);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius);
+  opacity: 0.85;
+}
+
+.navbar-links a:hover {
+  opacity: 1;
+}
+
+.navbar-links a.active {
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+}

@@ -30,9 +30,6 @@ public class Foto {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "titolo")
-    private String titolo;
-
     @Column(name = "contenuto")
     private String contenuto;
 
@@ -40,6 +37,6 @@ public class Foto {
     private Instant createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "post_id", nullable = true)
     private Post post;
 }
